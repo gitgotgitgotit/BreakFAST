@@ -2,7 +2,7 @@
 Usage: 
 ------
     
-    ./BreakFAST.py -aesKey <armorKey> -machine <armorPrincipal> -outfile <ccache> REALM/user:password
+    ./BreakFAST.py -aesKey <key> -machine <machine> -outfile <ccache> REALM/user:password
 
 Details:
 --------
@@ -186,7 +186,7 @@ def main():
     fast_ccache = GetFASTArmor(outfile, realm, username, password)
 
     # 3. Get FAST ST for CIFS
-    GetFASTSt(realm, username, fast_ccache, machine)
+    GetFASTSt(realm, username, fast_ccache, machine) # todo: args SPN
 
     # 4. Do whatever with this, PsExec ?
     print("---"*10)

@@ -1,8 +1,22 @@
 # BreakFAST - Kerberos FAST Armoring Abuse 
 
-Proof of concept for abusing Kerberos FAST (Flexible Authentication Secure Tunneling) Armoring (MS-KILE/RFC-6113). This can be used in post-ex lateral movement in environments where Kerberos FAST armoring is enabled and preventing you from using your favorite tools such as `GetTGT.py`, `psexec.py` or `evil-winrm`. See below for usage and further details on *why* and *how*. 
+Proof of concept for abusing Kerberos Armoring, a.k.a FAST (Flexible Authentication Secure Tunneling) Armoring (MS-KILE/RFC-6113). This can be used in post-ex lateral movement in environments where Kerberos FAST armoring is enabled and preventing you from using your favorite tools such as `GetTGT.py`, `psexec.py` or `evil-winrm`. See below for usage and further details on *why* and *how*. 
 
-<img src="img/knight-red.jpg" style="width: 800px; height: 400px;">
+<img src="img/knight-red.jpg" style="width: 1200px; height: 400px;">
+
+## Harden domain use case
+
+If you are in a harden domain where `NTLM` authentication is disabled and Kerberos armoring is enabled you migh observe the following behaviour : 
+
+<img src="img/harden_fail1.png" style="width: 1200px; height: 180px;">
+
+You cannot obtain a `TGT` remotely because your host is not domain-joined, and you cannot use `NTLM` authentication, even with the correct password. 
+
+This is where `BreakFAST.py` comes in. Given that you have previously compromised a domain-joined system and recovered its long term secret by dumping `LSA`, you can *forge* armored ticket requests and use them remotely. 
+
+<img src="img/armor1.png" style="width: 1200px; height: 800px;">
+
+This is especially useful as no tool from `impacket` currently supports native armoring, as detailed in [this blog](https://www.trustedsec.com/blog/i-wanna-go-fast-really-fast-like-kerberos-fast). See below for details.
 
 ## Tool usage
 
@@ -143,7 +157,7 @@ From the DC perspective, this is because armoring comes in the form of a `GPO` i
 
 <img alt="Image from TrustedSec" src="img/gpo.jpg" style="width: 800px; height: 400px;">
 
-## How do FAST armoring actually work ?
+## How does FAST armoring actually work ?
 
 While there has already been great publications on the matter, I found actually quit few details on how this is implemented in MS-KILE (suprised ?). The main ressources to understand the cryptographic approach is here either [RFC 6113](https://www.rfc-editor.org/rfc/rfc6113.txt) or [this blog](https://www.trustedsec.com/blog/i-wanna-go-fast-really-fast-like-kerberos-fast). Based on these, we can sum-up as follows: 
 
@@ -234,6 +248,8 @@ DC -> Client
 ## Futur works
 
 Obviously this is a PoC, so the code is super minimalist. PR are welcome to add other encryption algorithms and make a nice little package that can be used *inline* with your favorite `impacket` tools. Otherwise I think it's useful *as-is* to generate a `.ccache` to then use with `-k -no-pass`. 
+
+For now the tool emits a `TGS-REQ` for CIFS\host, but it's hardcoded. We can add an option to query any desired SPN. Basically turnning the tool into `GetFASTTGT.py` and `GetFASTSt.py` alike. 
 
 We should also investigate how this can be extended to `anonymous PKINIT` (which is the other type of armor key generation mechanism described in the RFC (see section 5.4.1.1)) and eventually see how this can be combined with delegation related vectors to trigger FAST AP-REQS relay-style... TBC :)
 
